@@ -11,38 +11,55 @@
         <div>Microblog: <a href="/index">Home</a></div>
         <hr>
         {% block content %}{% endblock %}
+        <button onclick=publishMsg()>publish "hello"</button>
     </body>
-    
+
     <script>
-      var host = "127.0.0.1";
-      var port = 8000;
+      let client;
+      let host = "127.0.0.1";
+      let port = 8000;
 
       function onConnect() {
         console.log("Connected");
         mqtt.subscribe("home");
-        var msg = new Paho.MQTT.Message("Hello World");
-        msg.destinationName("Home");
+        publishMsg();
       }
 
       function onMessageArrived(message) {
         let msg = message.payloadString;
         let topic = message.destinationName;
-        document.write("New message" + msg);
+        
+        let text = document.createElement("P");
+        text.innerHTML = "New message: " + msg + "\n";
+        document.body.appendChild(text);
       }
       
       function mqttConnect() {
         console.log("connecting to " + host + ":" + port);
         mqtt = new Paho.MQTT.Client(host, port, "clientjs");
         mqtt.onMessageArrived = onMessageArrived;
-        document.write("Connecting to " + host);
+
+        let text = document.createElement("P");
+        text.innerHTML = "Connecting to " + host + "\n";
+        document.body.appendChild(text);
+
         var options = {
           timeout: 5,
           onSuccess: onConnect,
         };
-
         mqtt.connect(options);
-        
       }
+
+      function newMsg(message, topic) {
+        let msg = new Paho.MQTT.Message(message);
+        msg.destinationName = topic;
+        return msg;
+      }
+
+      function publishMsg() {
+        mqtt.send(newMsg("hello", "home"));
+      }
+
       mqttConnect();
     </script>
 </html>
